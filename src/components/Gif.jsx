@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
 import GIF from 'gif.js.optimized';
 GIF.prototype.workerScript = '/gif.worker.js';
+import './gif.scss';
+import backImg from '../assets/back-gif.jpg';
+import { LuLoaderCircle } from "react-icons/lu";
 
 const VideoToGif = () => {
   const videoRef = useRef(null);
+  const fileInputRef = useRef(null); // Référence pour l'input caché
   const [videoURL, setVideoURL] = useState(null);
   const [gifURL, setGifURL] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,16 +72,38 @@ const VideoToGif = () => {
     setShowResetButton(false);
   };
 
+  const handleChooseFile = () => {
+    fileInputRef.current.click(); // Déclenche le clic sur l'input caché
+  };
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+    <div className="container_gif_gen"
+    style={{
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url(${backImg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }}>
       <h2>Convertisseur Vidéo en GIF</h2>
 
+      {/* Input caché pour uploader la vidéo */}
       <input
         type="file"
         accept="video/*"
+        ref={fileInputRef}
         onChange={handleFileChange}
-        style={{ marginBottom: '20px' }}
+        style={{ display: 'none' }}
       />
+
+      {/* Bouton personnalisé pour sélectionner un fichier */}
+      {!videoURL && (
+        <button
+          onClick={handleChooseFile}
+          className='button-size'
+        >
+          Choisir une vidéo
+        </button>
+      )}
 
       {videoURL && (
         <div style={{ marginBottom: '20px' }}>
@@ -85,20 +111,20 @@ const VideoToGif = () => {
             ref={videoRef}
             src={videoURL}
             controls
-            style={{ width: '100%', maxWidth: '600px' }}
           />
         </div>
       )}
 
       {videoURL && !gifURL && !isLoading && (
-        <button onClick={handleGenerateGif} style={{ marginBottom: '20px' }}>
+        <button onClick={handleGenerateGif}  className='button-size'
+      >
           Convertir en GIF
         </button>
       )}
 
       {isLoading && (
-        <div style={{ marginTop: '20px' }}>
-          <p>Génération du GIF en cours...</p>
+        <div className='loading'>
+          <LuLoaderCircle />
         </div>
       )}
 
@@ -107,13 +133,7 @@ const VideoToGif = () => {
           <a
             href={gifURL}
             download="output.gif"
-            style={{
-              color: 'blue',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              marginTop: '20px',
-              display: 'block',
-            }}
+            className='button-size'
             onClick={() => setShowResetButton(true)}
           >
             Télécharger le GIF
@@ -121,18 +141,10 @@ const VideoToGif = () => {
         </div>
       )}
 
-      {showResetButton && (
+      {gifURL && (
         <button
           onClick={handleReset}
-          style={{
-            marginTop: '30px',
-            padding: '10px 20px',
-            backgroundColor: 'grey',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '16px',
-          }}
+          className='button-size grey'
         >
           Convertir une autre vidéo
         </button>

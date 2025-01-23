@@ -1,0 +1,93 @@
+body{
+    margin: 0;
+}
+.container_gif_gen{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100dvh;
+    font-family: 'Poppins', sans-serif;
+    background-color: rgba(0, 0, 0, 0.8);
+    h2{
+        text-align: center;
+        color: white;
+        font-size: 20px;
+        @media(min-width: 768px){
+            font-size: 35px;
+        }
+    }
+    input{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    #file-upload-button{
+        padding: 15px;
+        background-color: transparent;
+    }
+    div{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        video{
+            width: 85%!important;
+            height: auto;
+            margin-bottom: 50px;
+        }
+    }
+}
+@keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    25% {
+      transform: rotate(90deg);
+    }
+    50% {
+      transform: rotate(180deg);
+      /* Pause ou ralentissement ici */
+    }
+    75% {
+      transform: rotate(270deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+.loading{
+    animation : rotate 2s linear infinite;
+}
+.loading svg{
+    width: 5em;
+    height: 5em;
+    stroke: white;
+}
+.button-size{
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all ease 0.3s;
+    &:hover{
+        transform: scale(1.05);
+        transition: all ease 0.3s;
+    }
+}
+.grey{
+    background-color: grey!important;
+    margin: 20px 0; 
+}
+@media(min-width: 768px){
+    .button-size{
+        font-size: 22px!important;
+    }
+}
