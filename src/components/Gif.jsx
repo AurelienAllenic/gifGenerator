@@ -7,7 +7,7 @@ import { LuLoaderCircle } from "react-icons/lu";
 
 const VideoToGif = () => {
   const videoRef = useRef(null);
-  const fileInputRef = useRef(null); // Référence pour l'input caché
+  const fileInputRef = useRef(null);
   const [videoURL, setVideoURL] = useState(null);
   const [gifURL, setGifURL] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +73,7 @@ const VideoToGif = () => {
   };
 
   const handleChooseFile = () => {
-    fileInputRef.current.click(); // Déclenche le clic sur l'input caché
+    fileInputRef.current.click();
   };
 
   return (
@@ -86,7 +86,6 @@ const VideoToGif = () => {
     }}>
       <h2>Convertisseur Vidéo en GIF</h2>
 
-      {/* Input caché pour uploader la vidéo */}
       <input
         type="file"
         accept="video/*"
@@ -95,7 +94,6 @@ const VideoToGif = () => {
         style={{ display: 'none' }}
       />
 
-      {/* Bouton personnalisé pour sélectionner un fichier */}
       {!videoURL && (
         <button
           onClick={handleChooseFile}
