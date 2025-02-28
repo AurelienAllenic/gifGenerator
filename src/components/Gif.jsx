@@ -12,6 +12,7 @@ const VideoToGif = () => {
   const [gifURL, setGifURL] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showResetButton, setShowResetButton] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -66,10 +67,19 @@ const VideoToGif = () => {
   };
 
   const handleReset = () => {
+    if (gifURL && !showResetButton) {
+      setShowModal(true);
+      return;
+    }
+    resetProcess();
+  };
+
+  const resetProcess = () => {
     setVideoURL(null);
     setGifURL(null);
     setIsLoading(false);
     setShowResetButton(false);
+    setShowModal(false);
   };
 
   const handleChooseFile = () => {
@@ -114,8 +124,7 @@ const VideoToGif = () => {
       )}
 
       {videoURL && !gifURL && !isLoading && (
-        <button onClick={handleGenerateGif}  className='button-size'
-      >
+        <button onClick={handleGenerateGif} className='button-size'>
           Convertir en GIF
         </button>
       )}
@@ -146,6 +155,24 @@ const VideoToGif = () => {
         >
           Convertir une autre vidéo
         </button>
+      )}
+
+      {/* Modal Confirmation */}
+      {showModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <p>Voulez-vous télécharger le GIF avant d'en convertir un autre ?</p>
+            <div className="modal-buttons">
+              <a href={gifURL} download="output.gif" className="button-size"
+                onClick={() => setShowModal(false)}>
+                Oui, Télécharger
+              </a>
+              <button className="button-size grey" onClick={resetProcess}>
+                Non, Continuer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
