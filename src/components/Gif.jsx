@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import GIF from 'gif.js.optimized';
 GIF.prototype.workerScript = '/gif.worker.js';
 import './gif.scss';
@@ -13,6 +13,14 @@ const VideoToGif = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetButton, setShowResetButton] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }, [isLoading]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -32,7 +40,7 @@ const VideoToGif = () => {
     const ctx = canvas.getContext('2d');
 
     const gif = new GIF({
-      workers: 2,
+      workers: 4, // Increased number of workers
       quality: 10,
     });
 
@@ -43,7 +51,7 @@ const VideoToGif = () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      gif.addFrame(canvas, { copy: true, delay: 100 });
+      gif.addFrame(canvas, { copy: true, delay: 50 }); // Reduced delay between frames
     };
 
     const processFrames = () => {
@@ -53,7 +61,7 @@ const VideoToGif = () => {
       }
 
       captureFrame();
-      video.currentTime += 0.1;
+      video.currentTime += 0.2; // Increased time step to capture fewer frames
     };
 
     gif.on('finished', (blob) => {
