@@ -10,7 +10,7 @@ body{
     min-height: 100dvh;
     font-family: 'Poppins', sans-serif;
     background-color: rgba(0, 0, 0, 0.8);
-    padding: 50px 0;
+    
     h2{
         text-align: center;
         color: white;
@@ -34,13 +34,31 @@ body{
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         width: 100%;
         video{
             width: 85%!important;
             height: auto;
             max-height: 500px;
-            margin-bottom: 50px;
         }
+    }
+}
+.container-modifiers{
+    display: flex;
+    flex-direction: row!important;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    div{
+        width: 25%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 25px;
+        color: white;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 15px;
+        border-radius: 15px;
     }
 }
 @keyframes rotate {
@@ -70,6 +88,14 @@ body{
     height: 5em;
     stroke: white;
 }
+.loader-time{
+    p{
+        color: white;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-radius: 10px;
+    }
+}
 .button-size{
     background-color: #007bff;
     color: white;
@@ -79,6 +105,7 @@ body{
     font-size: 16px;
     border-radius: 5px;
     text-decoration: none;
+    margin-top: 50px;
     transition: all ease 0.3s;
     &:hover{
         transform: scale(1.05);
@@ -108,6 +135,27 @@ body{
         .modal-buttons{
             display: flex;
             gap: 15px;
+        }
+    }
+}
+@media(max-width: 817px){
+    .container-modifiers div{
+        width: 35%;
+    }
+}
+@media(max-width: 584px){
+    .container-modifiers{
+        flex-direction: column!important;
+        gap: 0;
+        div{
+            margin-top: 15px;
+        }
+    }
+}
+@media(max-width: 414px){
+    .container-modifiers{
+        div{
+            width: 65%;
         }
     }
 }

@@ -11,8 +11,16 @@ const VideoToGif = () => {
   const [videoURL, setVideoURL] = useState(null);
   const [gifURL, setGifURL] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showResetButton, setShowResetButton] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isRendering, setIsRendering] = useState(false);
+  const [estimatedTotalTime, setEstimatedTotalTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [startTime, setStartTime] = useState(null);
+  const [smoothedEstimatedTime, setSmoothedEstimatedTime] = useState(0);
+  
+  // Options utilisateur pour qualité et frames
+  const [frameRate, setFrameRate] = useState(0.2); // Capture toutes les 0.2s par défaut
+  const [gifQuality, setGifQuality] = useState(10); // Qualité 10 par défaut
 
   useEffect(() => {
     if (isLoading) {
@@ -22,13 +30,28 @@ const VideoToGif = () => {
     }
   }, [isLoading]);
 
+  useEffect(() => {
+    if (isRendering && estimatedTotalTime > 0) {
+      const interval = setInterval(() => {
+        setElapsedTime((prev) => {
+          const newTime = prev + 0.1;
+          const newEstimate = estimatedTotalTime - newTime;
+          const smoothedTime = (newEstimate * 0.8) + (smoothedEstimatedTime * 0.2);
+          setSmoothedEstimatedTime(Math.max(smoothedTime, 1));
+          return newTime;
+        });
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [isRendering, estimatedTotalTime, smoothedEstimatedTime]);
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoURL(url);
       setGifURL(null);
-      setShowResetButton(false);
     }
   };
 
@@ -37,61 +60,72 @@ const VideoToGif = () => {
 
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Optimisation Canvas
 
     const gif = new GIF({
-      workers: 4, // Increased number of workers
-      quality: 10,
+      workers: 4,
+      quality: gifQuality,
     });
 
     video.currentTime = 0;
     setIsLoading(true);
+    setProgress(0);
+    setElapsedTime(0);
+    setStartTime(Date.now());
+
+    const totalFrames = Math.ceil(video.duration / frameRate);
+    let capturedFrames = 0;
 
     const captureFrame = () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      gif.addFrame(canvas, { copy: true, delay: 50 }); // Reduced delay between frames
+      gif.addFrame(canvas, { copy: true, delay: 50 });
+
+      capturedFrames++;
+      setProgress(Math.min(50, Math.round((capturedFrames / totalFrames) * 50)));
     };
 
-    const processFrames = () => {
+    const processFrames = async () => {
       if (video.currentTime >= video.duration) {
+        startRendering(totalFrames);
         gif.render();
         return;
       }
-
       captureFrame();
-      video.currentTime += 0.2; // Increased time step to capture fewer frames
+      video.currentTime += frameRate;
     };
 
-    gif.on('finished', (blob) => {
-      const gifURL = URL.createObjectURL(blob);
-      setGifURL(gifURL);
-      setIsLoading(false);
-    });
+    const startRendering = (totalFrames) => {
+      setProgress(50);
+      setStartTime(Date.now());
+      setElapsedTime(0);
+      setIsRendering(true);
+
+      const estimatedRenderTime = totalFrames * 0.05; // Estimation initiale (modifiable)
+      setEstimatedTotalTime(estimatedRenderTime);
+
+      const interval = setInterval(() => {
+        setElapsedTime((prev) => {
+          const newTime = prev + 0.1;
+          setProgress(Math.min(99, Math.round((newTime / estimatedRenderTime) * 50 + 50)));
+          return newTime;
+        });
+      }, 100);
+
+      gif.on('finished', (blob) => {
+        clearInterval(interval);
+        const gifURL = URL.createObjectURL(blob);
+        setGifURL(gifURL);
+        setIsLoading(false);
+        setProgress(100);
+        setIsRendering(false);
+        setEstimatedTotalTime(0);
+      });
+    };
 
     video.addEventListener('seeked', processFrames);
     processFrames();
-  };
-
-  const handleReset = () => {
-    if (gifURL && !showResetButton) {
-      setShowModal(true);
-      return;
-    }
-    resetProcess();
-  };
-
-  const resetProcess = () => {
-    setVideoURL(null);
-    setGifURL(null);
-    setIsLoading(false);
-    setShowResetButton(false);
-    setShowModal(false);
-  };
-
-  const handleChooseFile = () => {
-    fileInputRef.current.click();
   };
 
   return (
@@ -113,21 +147,33 @@ const VideoToGif = () => {
       />
 
       {!videoURL && (
-        <button
-          onClick={handleChooseFile}
-          className='button-size'
-        >
+        <button onClick={() => fileInputRef.current.click()} className='button-size'>
           Choisir une vidéo
         </button>
       )}
 
       {videoURL && (
-        <div style={{ marginBottom: '20px' }}>
-          <video
-            ref={videoRef}
-            src={videoURL}
-            controls
-          />
+        <div>
+          <video ref={videoRef} src={videoURL} controls />
+          <div className='container-modifiers'>
+          <div>
+            <label>Nombre de frames (rapidité):</label>
+            <select value={frameRate} onChange={(e) => setFrameRate(parseFloat(e.target.value))}>
+              <option value="0.1">Très fluide</option>
+              <option value="0.5">Fluide</option>
+              <option value="0.2">Rapide - saccadé</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Qualité du GIF :</label>
+            <select value={gifQuality} onChange={(e) => setGifQuality(parseInt(e.target.value))}>
+              <option value="1">Haute qualité</option>
+              <option value="5">Moyenne</option>
+              <option value="10">Faible (rapide)</option>
+            </select>
+          </div>
+          </div>
         </div>
       )}
 
@@ -138,48 +184,21 @@ const VideoToGif = () => {
       )}
 
       {isLoading && (
-        <div className='loading'>
-          <LuLoaderCircle />
+        <div className='loading-container'>
+          <div className='loading'>
+            <LuLoaderCircle />
+          </div>
+          <div className='loader-time'>
+            <p>Progression : {progress}%</p>
+          </div>
         </div>
       )}
 
       {gifURL && (
         <div>
-          <a
-            href={gifURL}
-            download="output.gif"
-            className='button-size'
-            onClick={() => setShowResetButton(true)}
-          >
+          <a href={gifURL} download="output.gif" className='button-size'>
             Télécharger le GIF
           </a>
-        </div>
-      )}
-
-      {gifURL && (
-        <button
-          onClick={handleReset}
-          className='button-size grey'
-        >
-          Convertir une autre vidéo
-        </button>
-      )}
-
-      {/* Modal Confirmation */}
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <p>Voulez-vous télécharger le GIF avant d'en convertir un autre ?</p>
-            <div className="modal-buttons">
-              <a href={gifURL} download="output.gif" className="button-size"
-                onClick={() => setShowModal(false)}>
-                Oui, Télécharger
-              </a>
-              <button className="button-size grey" onClick={resetProcess}>
-                Non, Continuer
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
